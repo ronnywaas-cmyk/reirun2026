@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aplikasi Pendaftaran - Supabase</title>
+  <title>Aplikasi Pendaftaran Tiket</title>
 
   <!-- 1. Import Supabase JS SDK dari CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -20,6 +20,7 @@
       align-items: center;
       min-height: 100vh;
       margin: 0;
+      padding: 20px 0;
     }
     .container {
       background: #ffffff;
@@ -27,7 +28,7 @@
       border-radius: 10px;
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
       width: 100%;
-      max-width: 400px;
+      max-width: 450px;
     }
     h2 {
       margin-top: 0;
@@ -43,16 +44,27 @@
       color: #555;
       font-weight: 600;
     }
-    input {
+    input, select {
       width: 100%;
       padding: 10px;
       border: 1px solid #ccc;
       border-radius: 5px;
       font-size: 14px;
     }
-    input:focus {
+    input:focus, select:focus {
       outline: none;
       border-color: #3ecf8e;
+    }
+    .price-box {
+      background-color: #e8f8f0;
+      border: 1px solid #3ecf8e;
+      padding: 12px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+      text-align: center;
+      font-weight: bold;
+      color: #27ae60;
+      font-size: 16px;
     }
     button {
       width: 100%;
@@ -80,17 +92,47 @@
 <body>
 
   <div class="container">
-    <h2>Form Pendaftaran</h2>
+    <h2>Form Pendaftaran Tiket</h2>
 
     <form id="pendaftaranForm">
       <div class="form-group">
         <label for="nama">Nama Lengkap</label>
-        <input type="text" id="nama" placeholder="Masukkan nama Anda" required>
+        <input type="text" id="nama" placeholder="Masukkan nama lengkap" required>
       </div>
 
       <div class="form-group">
-        <label for="email">Alamat Email</label>
-        <input type="email" id="email" placeholder="Masukkan email Anda" required>
+        <label for="usia">Usia (Tahun)</label>
+        <input type="number" id="usia" min="1" placeholder="Masukkan usia" required>
+      </div>
+
+      <div class="form-group">
+        <label for="whatsapp">Nomor WhatsApp</label>
+        <input type="tel" id="whatsapp" placeholder="Contoh: 08123456789" required>
+      </div>
+
+      <div class="form-group">
+        <label for="ukuran">Pilihan Ukuran Baju</label>
+        <select id="ukuran" required>
+          <option value="">-- Pilih Ukuran --</option>
+          <option value="S">S</option>
+          <option value="M">M</option>
+          <option value="L">L</option>
+          <option value="XL">XL</option>
+          <option value="2XL">2XL</option>
+          <option value="3XL">3XL</option>
+          <option value="4XL">4XL</option>
+          <option value="5XL">5XL</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="jumlah_tiket">Jumlah Tiket (Rp 100.000 / tiket)</label>
+        <input type="number" id="jumlah_tiket" min="1" value="1" required>
+      </div>
+
+      <!-- Tampilan Otomatis Total Harga -->
+      <div class="price-box">
+        Total Bayar: <span id="totalHarga">Rp 100.000</span>
       </div>
 
       <button type="submit" id="btnSubmit">Kirim Pendaftaran</button>
@@ -101,35 +143,59 @@
 
   <!-- 2. Konfigurasi dan Inisialisasi Supabase -->
   <script>
-    // Konfigurasi Supabase menggunakan kredensial proyek Anda
     const SUPABASE_URL = 'https://mrfyjpmweqjdvkjzebbtc.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1yZnlqcHdlcWpkdmtqemViYnRjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyODI1MzQsImV4cCI6MjEwMDg1ODUzNH0.WmFCLoQuu6wvcQgg312EI46eE0oKVWcz2DndjTax3rE';
 
-    // Inisialisasi Supabase Client
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Ambil elemen DOM
+    // Elemen DOM
     const form = document.getElementById('pendaftaranForm');
+    const inputJumlahTiket = document.getElementById('jumlah_tiket');
+    const displayTotalHarga = document.getElementById('totalHarga');
     const statusMsg = document.getElementById('statusMessage');
     const btnSubmit = document.getElementById('btnSubmit');
+
+    const HARGA_PER_TIKET = 100000;
+
+    // Fungsi menghitung total harga secara otomatis
+    function updateHarga() {
+      let jumlah = parseInt(inputJumlahTiket.value) || 1;
+      if (jumlah < 1) jumlah = 1;
+      
+      const total = jumlah * HARGA_PER_TIKET;
+      displayTotalHarga.textContent = 'Rp ' + total.toLocaleString('id-ID');
+    }
+
+    // Jalankan kalkulasi harga saat jumlah tiket diubah
+    inputJumlahTiket.addEventListener('input', updateHarga);
 
     // Menangani Event Submit Form
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
 
       const nama = document.getElementById('nama').value;
-      const email = document.getElementById('email').value;
+      const usia = parseInt(document.getElementById('usia').value);
+      const whatsapp = document.getElementById('whatsapp').value;
+      const ukuran = document.getElementById('ukuran').value;
+      const jumlahTiket = parseInt(inputJumlahTiket.value);
+      const totalHarga = jumlahTiket * HARGA_PER_TIKET;
 
-      // Status loading
       btnSubmit.disabled = true;
       btnSubmit.textContent = 'Mengirim...';
       statusMsg.style.color = '#555';
       statusMsg.textContent = 'Sedang memproses pendaftaran...';
 
-      // Mengirim data ke tabel "pendaftaran" di Supabase
+      // Mengirim data lengkap ke tabel "pendaftaran" di Supabase
       const { data, error } = await supabaseClient
-        .from('pendaftaran') // Pastikan nama tabel di Supabase Anda adalah "pendaftaran"
-        .insert([{ nama: nama, email: email }]);
+        .from('pendaftaran')
+        .insert([{
+          nama: nama,
+          usia: usia,
+          whatsapp: whatsapp,
+          ukuran: ukuran,
+          jumlah_tiket: jumlahTiket,
+          total_harga: totalHarga
+        }]);
 
       btnSubmit.disabled = false;
       btnSubmit.textContent = 'Kirim Pendaftaran';
@@ -142,6 +208,7 @@
         statusMsg.style.color = '#27ae60';
         statusMsg.textContent = 'Pendaftaran berhasil disimpan!';
         form.reset();
+        updateHarga(); // Reset kalkulasi harga ke awal
       }
     });
   </script>
