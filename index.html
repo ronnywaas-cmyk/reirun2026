@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aplikasi Pendaftaran - Supabase</title>
+
+  <!-- 1. Import Supabase JS SDK dari CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    body {
+      background-color: #f4f7f6;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    .container {
+      background: #ffffff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 400px;
+    }
+    h2 {
+      margin-top: 0;
+      color: #333;
+      text-align: center;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      color: #555;
+      font-weight: 600;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 14px;
+    }
+    input:focus {
+      outline: none;
+      border-color: #3ecf8e;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background-color: #3ecf8e;
+      border: none;
+      border-radius: 5px;
+      color: white;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    button:hover {
+      background-color: #2eaf72;
+    }
+    #statusMessage {
+      margin-top: 15px;
+      text-align: center;
+      font-weight: 500;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h2>Form Pendaftaran</h2>
+
+    <form id="pendaftaranForm">
+      <div class="form-group">
+        <label for="nama">Nama Lengkap</label>
+        <input type="text" id="nama" placeholder="Masukkan nama Anda" required>
+      </div>
+
+      <div class="form-group">
+        <label for="email">Alamat Email</label>
+        <input type="email" id="email" placeholder="Masukkan email Anda" required>
+      </div>
+
+      <button type="submit" id="btnSubmit">Kirim Pendaftaran</button>
+    </form>
+
+    <div id="statusMessage"></div>
+  </div>
+
+  <!-- 2. Konfigurasi dan Inisialisasi Supabase -->
+  <script>
+    // Konfigurasi Supabase menggunakan kredensial proyek Anda
+    const SUPABASE_URL = 'https://mrfyjpmweqjdvkjzebbtc.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1yZnlqcHdlcWpkdmtqemViYnRjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyODI1MzQsImV4cCI6MjEwMDg1ODUzNH0.WmFCLoQuu6wvcQgg312EI46eE0oKVWcz2DndjTax3rE';
+
+    // Inisialisasi Supabase Client
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Ambil elemen DOM
+    const form = document.getElementById('pendaftaranForm');
+    const statusMsg = document.getElementById('statusMessage');
+    const btnSubmit = document.getElementById('btnSubmit');
+
+    // Menangani Event Submit Form
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const nama = document.getElementById('nama').value;
+      const email = document.getElementById('email').value;
+
+      // Status loading
+      btnSubmit.disabled = true;
+      btnSubmit.textContent = 'Mengirim...';
+      statusMsg.style.color = '#555';
+      statusMsg.textContent = 'Sedang memproses pendaftaran...';
+
+      // Mengirim data ke tabel "pendaftaran" di Supabase
+      const { data, error } = await supabaseClient
+        .from('pendaftaran') // Pastikan nama tabel di Supabase Anda adalah "pendaftaran"
+        .insert([{ nama: nama, email: email }]);
+
+      btnSubmit.disabled = false;
+      btnSubmit.textContent = 'Kirim Pendaftaran';
+
+      if (error) {
+        console.error('Error Supabase:', error);
+        statusMsg.style.color = '#e74c3c';
+        statusMsg.textContent = 'Gagal mendaftar: ' + error.message;
+      } else {
+        statusMsg.style.color = '#27ae60';
+        statusMsg.textContent = 'Pendaftaran berhasil disimpan!';
+        form.reset();
+      }
+    });
+  </script>
+
+</body>
+</html>
